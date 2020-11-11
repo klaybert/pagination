@@ -36,15 +36,24 @@ $a.= "</tr></thead>";
 		</select>
 		<input type="text">
 	</form>
-	<button onclick="consulta()" >Consulta</button>
-	<select name="campos_indv" id="select_campos" onchange="consulta()">
-			<option value="5">5</option>
-			<option value="10">10</option>
-			<option value="15">15</option>
-			<option value="20">20</option>
-			<option value="25">25</option>
-			
-		</select>
+	<div class="d-flex justify-content-between">
+		<div>
+			<button onclick="consulta()" >Consulta</button>
+				<select name="campos_indv" id="select_campos" onchange="consulta()">
+						<option value="5">5</option>
+						<option value="10">10</option>
+						<option value="15">15</option>
+						<option value="20">20</option>
+						<option value="25">25</option>
+						
+				</select>			
+		</div>
+
+		<div id="high">
+				Busqueda por filtros: <input class="" type="text" placeholder="Escribe tu busqueda">
+				<button onclick="highlight()" >Buscar</button>
+		</div>
+	</div>
 <hr>
 <div id="resultados">
 	<table id="table" class="table table-hover">
@@ -55,16 +64,35 @@ $a.= "</tr></thead>";
 <div id="ultimo"></div>
 
 <center>
-<div id="pagination1"></div>
+	<div id="pagination1"></div>
 </center>
 
 <div id="limite" style="display: none"></div>
+<div id="estatus"></div>
+
 <script type="text/javascript">
+	function highlight()
+	{
+		$("table#table > tbody > tr").css("background-color","");
+		$("table#table > tbody > tr").css("color","black");
+		var dato = $("div#high>input").val();
+		$("table#table > tbody > tr > td").each(function()
+			{
+				if(dato == $(this).text())
+				{
+					var ids = $(this).parent().attr("id");
+					$("tr#"+ids).css("background-color","yellow");
+					// $(this).css("background-color","green");
+					$("tr#"+ids).css("color","blue");					
+				}
+			});		
+	}
+
 	function consulta()
 	{
 		$("table").text("");
 		var limite = $("div#limite").text();
-		alert(limite);
+		// alert(limite);
 		var pag = $("select#select_campos").val();
 		var formulario = new FormData();
 		var campo = $("select#select").val();
@@ -110,15 +138,10 @@ $a.= "</tr></thead>";
 
 					for(i=0;i<mensaje.length-1;i=i+4)
 					{
-						if(i == 0)
-						{
 
-						}
-
-						$("table").append("<tr><td>"+mensaje[i]+"</td><td>"+mensaje[i+1]+"</td><td>"+mensaje[i+2]+"</td><td>"+mensaje[i+3]+"</td></tr>");
+						$("table").append("<tr id='a"+i+"'><td>"+mensaje[i]+"</td><td>"+mensaje[i+1]+"</td><td>"+mensaje[i+2]+"</td><td>"+mensaje[i+3]+"</td></tr>");
 					}
-					//aqui hacemos la $("div#pagination")
-					$("div#ultimo").html("<p> El ultimo valor es: "+last_id+"</p>");				
+		
 					pagination(last_id, pag);
 				}
 			} 
@@ -128,24 +151,53 @@ $a.= "</tr></thead>";
 
 	function pagination(...arguments)
 	{
+		var limite = $("div#limite").text();
+		limite = parseInt(limite);
+		// alert("El valor recogido: "+limite);
 		$("div#pagination1").text("");
 		var last = arguments[0];
 		var pag = arguments[1];	
-		pag = parseInt(pag);	
+		pag = parseInt(pag);
+		// alert(pag);	
 		var a = 1;
 		$.post(
 			"pagination.php",
 			{datos:pag},
 			function(recibo)
 			{
+				// alert("El valor de recibo es: "+recibo);
 				var j = 0;
 				var pagina = 0;
+				var previo = limite-pag;
+				var prox = limite+pag;
+				recibo = parseInt(recibo);
+				if(limite == 0)
+				{
+
+				}
+				else
+				{
+					$("div#pagination1").append("<a href='#' onclick='buscar("+previo+")'> previous - </a>");
+				}
 				for(i=1;i<=recibo;i++)
 				{
-					
-					$("div#pagination1").append("<a href='#' onclick='buscar("+pagina+")'>"+i+"</a>"+" - ");
+					$("div#pagination1").append("<a id='a"+i+"' href='#' onclick='buscar("+pagina+")'>"+i+"</a>"+" - ");
 					pagina = pag+j;
 					j=j+pag;
+				}
+					// $("div#limite").val(j);
+					// alert("El valor de j es: "+j);
+				var ultimo = Math.ceil(recibo*pag);
+				ultimo = ultimo-pag;
+				// alert("el valor de ultimo es: "+ultimo);
+				if(limite == ultimo)
+				{
+
+				}else
+				{
+					alert("estudio de limite final: "+limite);
+					$("div#pagination1").append("<a href='#' onclick='buscar("+prox+")'> next </a>");
+
 				}
 			});
 	}
@@ -153,6 +205,8 @@ $a.= "</tr></thead>";
 	function buscar(vari)
 	{
 		var limite = vari;
+		// alert("El valor de limite guardado: "+limite);
+		// var ids = 
 		$("div#limite").text(limite);
 		consulta();
 
